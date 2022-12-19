@@ -71,7 +71,6 @@
 		kD = kD === '' ? 0 : kD;
 		let data = [];
 		let currentVelocity = startPoint;
-		let previousVelocity = startPoint;
 		let previousError = 0;
 		let integral = 0;
 		for (let time = 0; time < simulationTime; time += deltaTime) {
@@ -93,9 +92,11 @@
 				previousError = error;
 			}
 
+			mass = Math.max(mass, 0.011168); // Minimum mass value that works
+
 			// Momentum
 			let momentOfInertia = (mass * Math.pow(radiusMeters, 2)) / 2; // kg * m^2
-			let torque = currentMotorData.torque(currentVelocity) * motorCount * gearRatio * output; // Nm
+			let torque = currentMotorData.torque(currentVelocity) * motorCount * output * gearRatio; // Nm
 			let acceleration = torque / momentOfInertia; // rad/s/s
 
 			currentVelocity += acceleration * deltaTime;
@@ -103,8 +104,6 @@
 			// Apply friction
 			let frictionOut = friction * currentVelocity;
 			currentVelocity -= frictionOut;
-
-			previousVelocity = currentVelocity;
 
 			// Log data
 			data.push({
@@ -253,8 +252,9 @@
 				<Pancake.Point x={closest.time} y={closest.currentVelocity} let:d>
 					<div class="focus" />
 					<div class="tooltip" style="transform: translate-{pc(closest.time)}%, 0">
-						<strong>{closest.currentVelocity} rpm</strong>
-						<span>{Math.round(closest.time * 100) / 100} s</span>
+						<strong>{Math.round(closest.currentVelocity)} rpm</strong>
+						<p>{Math.abs(Math.round(closest.torque * 100) / 100)} Nm</p>
+						<p>{Math.round(closest.time * 100) / 100} s</p>
 					</div>
 				</Pancake.Point>
 			{/if}
@@ -368,7 +368,9 @@
 		white-space: nowrap;
 		width: 8em;
 		bottom: 1em;
-		/* background-color: white; */
+		background-color: white;
+		border: 1px solid black;
+		padding: 0.25em;
 		line-height: 1;
 		text-shadow: 0 0 10px white, 0 0 10px white, 0 0 10px white, 0 0 10px white, 0 0 10px white,
 			0 0 10px white, 0 0 10px white;
